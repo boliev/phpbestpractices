@@ -7,9 +7,14 @@
   		<link href="/css/style.css" rel="stylesheet">
   		<script src="/js/jquery-2.0.3.min.js"></script>
 		<script src="/js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="/js/code/shCore.js"></script>
+		<script type="text/javascript" src="/js/code/shBrushPhp.js"></script>
+		<link type="text/css" rel="stylesheet" href="css/code/shCoreDefault.css"/>
+		<script type="text/javascript"></script>
 		<script type="text/javascript">
 		$(function(){
 			$('body').scrollspy();
+			SyntaxHighlighter.all();
 		});
 		</script>
 	</head>
@@ -17,7 +22,7 @@
 
 <div class="row">
 <div class="col-md-3">
-<nav class="bs-sidebar hidden-print affix" role="complementary" id="#navbar">
+<nav class="bs-sidebar hidden-print affix" role="" id="#navbar">
     <ul class="nav $(function(){
     $('body').scrollspy();
     });-sidenav">
@@ -82,7 +87,7 @@ PHP это столетняя черепаха веб индустрии. Ее �
 
 Самый безопасный способ хэширования паролей - использование алгоритма bcrypt. Опенсорс библиотека  phpass предоставляет этот функционал в лекгком в использовании классе. 
 <h3>Пример:</h3>
-<pre>
+<pre class="brush: php;">
 &lt;?php
 // Подключаем библиотеку phpass
 require_once('phpass-0.3/PasswordHash.php');
@@ -114,7 +119,7 @@ How to safely store a password
 
 Вы должны использовать PDO prepared синтаксис, что бы предотвратить возможные атаки sql injection. Используя ф-цию bindValue() убедитесь что выш sql застрахован от атак sql injection первого порядка (Однако это не сто процентная защита). В прошлом, это достигалось комбинацией экранирующих функций. С PDO все гораздо легче.
 <h2>Пример:</h2>
-<pre>
+<pre class="brush: php;">
 &lt;?php
 try{
     // Создаем новое подключение.

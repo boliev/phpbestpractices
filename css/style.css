@@ -1,3 +1,12 @@
 nav li.active a {
 	font-weight: bold;
 }
+.bs-sidebar.affix {
+  position: static;
+}
+@media (min-width: 992px) {
+  .bs-sidebar.affix {
+    position: fixed; /* Undo the static from mobile first approach */
+    top: 80px;
+  }
+}
