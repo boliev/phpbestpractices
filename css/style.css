@@ -1,3 +1,41 @@
+nav.bs-sidebar {
+	background-color: #f0f0f0;
+	padding: 20px;
+	border: 1px solid #e3e3e3;
+}
+h2 {
+	font-size: 18px;
+	color: #336;
+	font-family: "Source Sans Pro", Helvetica, Arial, sans-serif;
+}
+h3 {
+	font-size: 18px;
+}
+article {
+	/*padding-top: 70px;*/
+}
+.navbar {
+	background-color: #669;
+}
+.navbar-default .navbar-brand {
+	color: #ffffff;
+}
+.navbar-default .navbar-brand:hover {
+	color: #f1f1f1;
+}
+.navbar-brand span {
+	color:#000000; 
+	font-weight:bold; 
+	font-size:30px;
+}
+.bs-sidebar li a{
+	font-size: 12px;
+	padding: 4px 15px;
+	color:#333;
+}
+.bs-sidebar li a:hover {
+	background-color: #f5f5f5;
+}
 nav li.active a {
 	font-weight: bold;
 }
@@ -6,7 +44,18 @@ nav li.active a {
 }
 @media (min-width: 992px) {
   .bs-sidebar.affix {
-    position: fixed; /* Undo the static from mobile first approach */
-    top: 80px;
+    position: fixed;
+    top: 70px;
   }
+}
+section {
+	padding-top: 80px;
+}
+section hr {
+	margin: 0px 30px 0px 30px;
+	position: relative;
+	top: 40px;
+}
+section h2 {
+	margin: 0px 0px 15px 0px;
 }
