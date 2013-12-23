@@ -42,6 +42,8 @@
         <li><a href="#mysql">Работа с базой данных MySQL</a></li>
         <li><a href="#tags">PHP тэги</a></li>
         <li><a href="#autoloading">Автозагрузка классов</a></li>
+        <li><a href="#quotes">Одинарные кавычки против двойных</a></li>
+        <li><a href="#defineconst">define() или const?</a></li>
     </ul>
 </nav>
 </div>
@@ -238,6 +240,62 @@ $var = new MyClass();
 	<li><a target="_blank" href="http://stackoverflow.com/questions/791899/efficient-php-auto-loading-and-naming-strategies">Stack Overflow: Эффективные стратегии именования при автозагрузке файлов в PHP</a> [eng]</li>
 </ul>
 <hr />
+</section>
+<section id="quotes">
+<h2>Одинарные кавычки против двойных, с точки зрения производительности.</h2>
+<div class="alert alert-info">На самом деле - не важно.</div>
+<p>Много храбрых воинов пало в святой войне одинарных кавычек против двойных. Строки в одинарных кавычках не парсятся, т.е., что бы вы не поместили в одинарные кавычки - оно и будет на выходе. Строки в двойных кавычках - парсятся, и любые переменные в строках будут обработаны интерпретатором. Также, экранированные символы, такие как: <b>\n</b> для перевода строки или <b>\t</b> для табуляции,  будут обработаны только в строках с двойными кавычками. </p>
+ <p>Т.к. строки в двойных кавычках, обрабатываются во время выполнения, есть теория, что с точки зрения производительности, лучше использовать одинарные кавычки, дабы интерпретатор не обрабатывал лишних строк. В некотором смысле - это правда. Но для реального среднего веб приложения, разница настолько мала, что не имеет никакого значения, а значит не важно, что вы в итоге выберете. Для <b>экстримально</b> высоконагруженных приложений, небольшая разница возможно есть. 
+<br />В любом случае, что бы вы не выбрали, будьте последовательны.</p>
+ <h3>Что почитать</h3>
+ <ul>
+  <li><a target="_blank" href="http://www.php.net/manual/ru/language.types.string.php">PHP Manual: Строки</a></li>
+  <li><a target="_blank" href="http://phpbench.com/">The PHP Benchmark</a> [eng]</li>
+  <li><a target="_blank" href="http://stackoverflow.com/questions/482202/is-there-a-performance-benefit-single-quote-vs-double-quote-in-php">Stack Overflow: Возрастет ли производительность, если использовать одинарные кавычки?</a> [eng]</li>
+</ul>
+ <hr />
+</section>
+<section id="defineconst">
+  <h2>define() или const?</h2>
+  <div class="alert alert-info">Используйте const если нужно определить константу класса, или у вас жесткие требования к производительности. Иначе define().</div>
+<p>Традиционно в PHP мы определяем константы используя функцию <a target="_blank" href="http://php.net/manual/ru/function.define.php">define()</a>. Но, не так давно, появилась возможность определять константы с помощью ключевого слова <a target="_blank" href="http://php.net/manual/ru/language.oop5.constants.php">const</a>. Так как же будет правильней?</p>
+<p>Ответ скрывается в небольшой разнице между этими двумя методами.</p>
+<p>define() определяет константу во время работы скрипта, тогда как const определяет константу в момент компиляции, что дает const очень незначительное преимущество в скорости.</p>
+<p>define() кладет константу в глобальную область видимости, хотя, вы можете добавить в нее namespace. Это значит, что вы не сможете использовать define() для определения констант класса.</p>
+<p>define() позволяет использовать выражения и в названии константы и в значении. Тогда как const не позволяет ни там ни там. Что делает define() гораздо более гибким.</p>
+<p>define() может быть вызвано в условном (if) блоке, тогда как const в условном блоке выдаст ошибку.</p>
+<h3>Пример: </h3>
+<pre class="brush: php">
+&lt;?php
+// Проверим, как оба метода работают с пространством имен
+namespace MiddleEarth\Creatures\Dwarves;
+const GIMLI_ID = 1;
+define('MiddleEarth\Creatures\Elves\LEGOLAS_ID', 2);
+ 
+echo(\MiddleEarth\Creatures\Dwarves\GIMLI_ID);  // 1
+echo(\MiddleEarth\Creatures\Elves\LEGOLAS_ID);  // 2; Обратите внимание, мы использовали define(), но пространство имен работает корректно.
+ 
+// Теперь, давайте немного нестандартным образом определим константы, описывающие путь до Мордера:
+define('TRANSPORT_METHOD_SNEAKING', 1 << 0); // OK!
+const TRANSPORT_METHOD_WALKING = 1 << 1; //Ошибка компиляции! const не может использовать выражение в качестве константы.
+ 
+// Далее, константы в условном блоке.
+define('HOBBITS_FRODO_ID', 1);
+ 
+if($isGoingToMordor){
+    define('TRANSPORT_METHOD', TRANSPORT_METHOD_SNEAKING); // OK!
+    const PARTY_LEADER_ID = HOBBITS_FRODO_ID // Ошибка компиляции: const не может использоваться в условном блоке
+}
+ 
+// И наконец, константа класса
+class OneRing{
+    const MELTING_POINT_DEGREES = 1000000; // OK!
+    define('SHOW_ELVISH_DEGREES', 200); // Ошибка компиляции: define() нельзя использовать внутри класса
+}
+?>
+ </pre>
+  
+  <hr />
 </section>
 </article>
 </div>
