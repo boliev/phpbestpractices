@@ -44,6 +44,11 @@
         <li><a href="#autoloading">Автозагрузка классов</a></li>
         <li><a href="#quotes">Одинарные кавычки против двойных</a></li>
         <li><a href="#defineconst">define() или const?</a></li>
+        <li><a href="#opcode">Кэширование в PHP</a></li>
+        <li><a href="#memcached">PHP и Memcached</a></li>
+        <li><a href="#regex">PHP и regex</a></li>
+
+        
     </ul>
 </nav>
 </div>
@@ -294,9 +299,110 @@ class OneRing{
 }
 ?>
  </pre>
-  
+  <p>Учитывая, что define(), несомненно более гибок, именно его вы и должны использовать. если только для вас не критичны константы классов. Использование const обычно способствует лучшей читаемости кода, но за счет гибкости.</p>
+  <ul>
+    <li><a target="_blank" href="http://stackoverflow.com/questions/2447791/define-vs-const">Stack Overflow: define() или const?</a> [eng]</li>
+    <li><a target="_blank" href="http://www.php.net/manual/ru/language.constants.syntax.php">PHP Manual: Константы</a></li>
+    <li><a target="_blank" href="http://stackoverflow.com/questions/1225082/define-vs-variable-in-php">Stack Overflow: define() или переменные</a> [eng]</li>
+  </ul>
   <hr />
 </section>
+
+<section id="opcode">
+  <h2>Кэширование в PHP</h2>
+  <div class="alert alert-info">Используйте APC</div>
+  <p>При стандартной инсталляции PHP, все скрипты компилируются и запускаются каждый раз при обращении. Трата времени на компиляцию одного и того же скрипта снова и снова, приводит к проблемам производительности на больших сайтах.</p>
+  <p>Решение - opcode кэшер. opcode кэшер - это система, запоминающая скомпилированные версии каждого скрипта, так что, серверу нет нужды, каждый раз, снова и снова их компилировать. Обычно, она так же достаточно умна, что бы определить, был ли скрипт изменен, и вам не нужно вручную сбрасывать кэш, если вы изменили исходный код.</p>
+  <p>Для PHP есть несколько решений:  <a target="_blank" href="http://eaccelerator.net/">eaccelerator</a>, <a target="_blank" href="http://xcache.lighttpd.net/">xcache</a> и <a target="_blank" href="http://www.php.net/manual/ru/book.apc.php">APC</a>. APC официально поддерживается проектом PHP, плюс, он самый распространенный. Также APC предоставляет постоянное key-value хранилище данных. Учитывая все это, именно его вы должны использовать. </p>
+  <h3>Устанока APC</h3>
+  <pre>sudo apt-get install php-apc</pre>
+  <p>Никакой дополнительной конфигурации не требуется.</p>
+  <h3>Использование APC как key-value хранилище</h3>
+  <p>APC также предоставляет  memcached-подобную функциональность, прозрачно для ваших скриптов. Большой плюс использования APC вместо memcached в том, что APC интегрирован в ядро PHP, и вам не нужно больше ничего устанавливать и поддерживать на сервере. С другой стороны, APC не распределенный кэш, если вам нужна эта возможность - используйте memcached.</p>
+  <h3>Пример</h3>
+  <pre class="brush: php">
+&lt;?php
+// Сохраняем некоторые значения в APC кэш.  Мы также можем передать время жизни, однако, этом примере, значения будут жить пока ими не заинтересуется сборщик мусора APC.
+apc_store('username-1532', 'Frodo Baggins');
+apc_store('username-958', 'Aragorn');
+apc_store('username-6389', 'Gandalf');
+ 
+// После сохранения этих значений, любой PHP скрипт имеет к ним доступ, и не важно когда он был запущен!
+$value = apc_fetch('username-958', $success);
+if($success === true)
+    print($value); // Aragorn
+ 
+$value = apc_fetch('username-1', $success); // $success будет установлен в false, т.к. такого ключа не существует.
+if($success !== true) // Примите к сведению !== проверяет на настоящий false, а не ложные, как например 0 или пустая строка.
+    print('Key not found');
+ 
+apc_delete('username-958'); // Этот ключ отныне недоступен.
+?>
+  </pre>
+  <h3>Подводные камни</h3>
+  <p>Если вы не используете PHP-FPM (например используете <a target="_blank" href="http://stackoverflow.com/questions/2712825/what-is-mod-php">mod_php</a> или <a target="_blank" href="http://www.fastcgi.com/mod_fastcgi/docs/mod_fastcgi.html">mod_fastcgi</a>), каждый PHP процесс будет использовать свой уникальный APC инстанс, включая хранилище. Это может привести к проблемам с синхронизацией в вашем коде, если вы не будете осторожны.</p> 
+  <h3>Что почитать</h3>
+  <ul>
+    <li><a target="_blank" href="http://www.php.net/manual/ru/book.apc.php">PHP Manual: APC</a></li>
+  </ul>
+  <hr />
+</section>
+
+<section id="memcached">
+  <h2>PHP и Memcached</h2>
+  <div class="alert alert-info">Если вам нужен распределенный кэш, используйте библиотеку  Memcached. В остальных случаях используйте APC.</div>
+  <p>Кэширование, часто, может улучшит производительность ваших приложений. Memcached - популярный выбор, который работает с многими языками, в том числе и с PHP.</p>
+   <p>Тем не менее, когда нужно обратится к Memcached серверу из PHP скрипта, у вас есть две различные, <span style="text-decoration:line-through">и очень глупо названные</span> библиотеки:  <a target="_blank" href="http://www.php.net/manual/ru/book.memcache.php">Memcache</a> и <a href="http://www.php.net/manual/ru/book.memcached.php" target="_blank">Memcached</a>. Это две разные библиотеки с почти одинаковым именем, и обе используются для доступа к инстансу Memcached.</p>
+   <p>Библиотека Memcached - имеет лучшую реализацию протокола Memcached. Она содержит несколько полезных возможностей, которых нет в Memcache, и похоже, что ее разработка идет активнее.</p>
+   <p>Тем не менее, если вам не нужен доступ к инстансу Memcached из нескольких распределенных серверов, используйте APC. APC поддерживается проектом PHP, имеет практически ту же функциональность, что и Memcached, и дополнительный бонус, в виде opcode кэширования, который улучшит производительность ваших скриптов.</p>
+   <h3>Установка библиотеки Memcached</h3>
+   <p>После установки Memcached server, вам нужно установить также клиентскую библиотеку Memcached. Без нее, ваши php скрипты не смогут взаимодействовать с Memcached сервером.</p>
+   <h3>Что почитать</h3>
+   <ul>
+    <li><a target="_blank" href="http://www.php.net/manual/ru/book.memcached.php">PHP Manual: Memcached</a></li>
+    <li><a target="_blank" href="http://www.php.net/manual/ru/book.apc.php">PHP Manual: APC</a></li>
+    <li><a target="_blank" href="http://stackoverflow.com/questions/1442411/when-should-i-use-memcache-instead-of-memcached">Stack Overflow: Memcache или Memcached в PHP</a> [eng]</li>
+    <li><a target="_blank" href="http://stackoverflow.com/questions/815041/memcached-vs-apc-which-one-should-i-choose">Stack Overflow: Memcached или APC, что выбрать?</a> [eng]</li>
+  </ul>
+  <hr />
+</section>
+
+<section id="regex">
+  <h2>PHP и regex</h2>
+  <p>В PHP есть два способа использовать регулярные выражения: <a target="_blank" href="http://www.php.net/manual/ru/book.pcre.php">PCRE</a> (preg_*) функции, и <a target="_blank" href="http://www.php.net/manual/ru/book.regex.php">POSIX</a> (ereg_*) функции. Каждое семейство использует немного различный букет регулярных выражений. К счастью для нас, расширение POSIX было помечено как устаревшее в версии PHP 5.3.0. Так что, вы никогда не должны писать код, использую POSIX функции. Всегда используйте PCRE функции, они же preg_* функции.
+</p>
+   <ul>
+    <li><a target="_blank" href="http://www.php.net/manual/ru/book.pcre.php">PHP Manual: PCRE</a></li>
+    <li><a target="_blank" href="http://www.noupe.com/php/php-regular-expressions.html">Разбираемся в регулярных выражениях</a> [eng]</li>
+  </ul>
+  <hr />
+</section>
+
+<section>
+  <h2>Запуск PHP на web-сервере</h2>
+  <div class="alert alert-info">Используйте Use PHP-FPM</div>
+  <p></p>
+   <ul>
+    <li><a target="_blank" href=""></a> [eng]</li>
+    <li><a target="_blank" href=""></a></li>
+    <li><a target="_blank" href=""></a> [eng]</li>
+  </ul>
+  <hr />
+</section>
+
+<!--
+<section>
+  <h2></h2>
+  <div class="alert alert-info"></div>
+  <p></p>
+   <ul>
+    <li><a target="_blank" href=""></a> [eng]</li>
+    <li><a target="_blank" href=""></a></li>
+    <li><a target="_blank" href=""></a> [eng]</li>
+  </ul>
+  <hr />
+</section>
+-->
 </article>
 </div>
 </div>
